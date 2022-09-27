@@ -1,11 +1,21 @@
 <?php
 /**************************************************
- * MKOnlinePlayer v2.3
- * 后台音乐数据抓取模块
- * 编写：mengkun(http://mkblog.cn)
- * 时间：2017-9-9
- * 特别感谢 @metowolf 提供的 Meting.php
+ * MKOnlinePlayer v2.4
  *************************************************/
+
+/************ ↓↓↓↓↓ 如果网易云音乐歌曲获取失效，请将你的 COOKIE 放到这儿 ↓↓↓↓↓ ***************/
+$netease_cookie = '';
+/************ ↑↑↑↑↑ 如果网易云音乐歌曲获取失效，请将你的 COOKIE 放到这儿 ↑↑↑↑↑ ***************/
+/**
+* cookie 获取及使用方法见 
+* https://github.com/mengkunsoft/MKOnlineMusicPlayer/wiki/%E7%BD%91%E6%98%93%E4%BA%91%E9%9F%B3%E4%B9%90%E9%97%AE%E9%A2%98
+* 
+* 更多相关问题可以查阅项目 wiki 
+* https://github.com/mengkunsoft/MKOnlineMusicPlayer/wiki
+* 
+*更多精品资源欢迎关注q群784821101
+**/
+
 
 define('HTTPS', false);    // 如果您的网站启用了https，请将此项置为“true”，如果你的网站未启用 https，建议将此项设置为“false”
 define('DEBUG', false);      // 是否开启调试模式，正常使用时请将此项置为“false”
@@ -27,22 +37,21 @@ require_once('plugns/Meting.php');
 use Metowolf\Meting;
 
 $source = getParam('source', 'netease');  // 歌曲源
-if($source == 'kugou' || $source == 'baidu') define('NO_HTTPS', true);    // 酷狗和百度音乐源暂不支持 https
 $API = new Meting($source);
 
 $API->format(true); // 启用格式化功能
 
+if($source == 'kugou' || $source == 'baidu') {
+    define('NO_HTTPS', true);        // 酷狗和百度音乐源暂不支持 https
+} elseif(($source == 'netease') && $netease_cookie) {
+    $API->cookie($netease_cookie);    // 解决网易云 Cookie 失效
+}
 
 switch(getParam('types'))   // 根据请求的 Api，执行相应操作
 {
     case 'url':   // 获取歌曲链接
         $id = getParam('id');  // 歌曲ID
         
-		if($source == 'netease') {    // 临时修复网易云链接获取失效（凑合一下..）
-            echojson('{"url":"https://music.163.com/song/media/outer/url?id='.$id.'.mp3","br":320}');
-            return;
-        }
-		
         $data = $API->url($id);
         
         echojson($data);
@@ -93,7 +102,10 @@ switch(getParam('types'))   // 根据请求的 Api，执行相应操作
         $limit = getParam('count', 20);  // 每页显示数量
         $pages = getParam('pages', 1);  // 页码
         
-        $data = $API->search($s, $pages, $limit);
+        $data = $API->search($s, [
+            'page' => $pages, 
+            'limit' => $limit
+        ]);
         
         echojson($data);
         break;
