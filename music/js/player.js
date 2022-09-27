@@ -1,8 +1,8 @@
 /**************************************************
- * MKOnlinePlayer v2.41
+ * MKOnlinePlayer v2.32
  * 播放器主功能模块
- * 编写：mengkun(https://mkblog.cn)
- * 时间：2018-3-13
+ * 编写：mengkun(http://mkblog.cn)
+ * 时间：2017-9-15
  *************************************************/
 // 播放器功能配置
 var mkPlayer = {
@@ -12,11 +12,11 @@ var mkPlayer = {
     defaultlist: 3,    // 默认要显示的播放列表编号
     autoplay: false,    // 是否自动播放(true/false) *此选项在移动端可能无效
     coverbg: true,      // 是否开启封面背景(true/false) *开启后会有些卡
-    mcoverbg: true,     // 是否开启[移动端]封面背景(true/false)
+    mcoverbg: false,     // 是否开启[移动端]封面背景(true/false)
     dotshine: true,    // 是否开启播放进度条的小点闪动效果[不支持IE](true/false) *开启后会有些卡
     mdotshine: false,   // 是否开启[移动端]播放进度条的小点闪动效果[不支持IE](true/false)
     volume: 0.6,        // 默认音量值(0~1之间)
-    version: "v2.41",    // 播放器当前版本号(仅供调试)
+    version: "v2.32",    // 播放器当前版本号(仅供调试)
     debug: false   // 是否开启调试模式(true/false)
 };
 
@@ -36,14 +36,8 @@ function audioErr() {
     // 没播放过，直接跳过
     if(rem.playlist === undefined) return true;
     
-    if(rem.errCount > 10) { // 连续播放失败的歌曲过多
-        layer.msg('似乎出了点问题~播放已停止');
-        rem.errCount = 0;
-    } else {
-        rem.errCount++;     // 记录连续播放失败的歌曲数目
-        layer.msg('当前歌曲播放失败，自动播放下一首');
-        nextMusic();    // 切换下一首歌
-    } 
+    layer.msg('当前歌曲播放失败，自动播放下一首');
+    nextMusic();    // 切换下一首歌
 }
 
 // 点击暂停按钮的事件
@@ -66,34 +60,6 @@ function pause() {
     }
 }
 
-// 循环顺序
-function orderChange() {
-    var orderDiv = $(".btn-order");
-    orderDiv.removeClass();
-    switch(rem.order) {
-        case 1:     // 单曲循环 -> 列表循环
-            orderDiv.addClass("player-btn btn-order btn-order-list");
-            orderDiv.attr("title", "列表循环");
-            layer.msg("列表循环");
-            rem.order = 2;
-            break;
-            
-        case 3:     // 随机播放 -> 单曲循环
-            orderDiv.addClass("player-btn btn-order btn-order-single");
-            orderDiv.attr("title", "单曲循环");
-            layer.msg("单曲循环");
-            rem.order = 1;
-            break;
-            
-        // case 2:
-        default:    // 列表循环(其它) -> 随机播放
-            orderDiv.addClass("player-btn btn-order btn-order-random");
-            orderDiv.attr("title", "随机播放");
-            layer.msg("随机播放");
-            rem.order = 3;
-    }
-}
-
 // 播放
 function audioPlay() {
     rem.paused = false;     // 更新状态（未暂停）
@@ -105,27 +71,9 @@ function audioPlay() {
     }
     
     var music = musicList[rem.playlist].item[rem.playid];   // 获取当前播放的歌曲信息
-    var msg = " 正在播放: " + music.name + " - " + music.artist;  // 改变浏览器标题
-    
-    // 清除定时器
-    if (rem.titflash !== undefined ) 
-    {
-        clearInterval(rem.titflash);
-    }
-    // 标题滚动
-    titleFlash(msg);
+    document.title = music.name + " - " + music.artist + " | " + rem.webTitle;  // 改变浏览器标题
 }
-// 标题滚动
-function titleFlash(msg) {
 
-    // 截取字符
-    var tit = function() {
-        msg = msg.substring(1,msg.length)+ msg.substring(0,1);
-        document.title = msg;
-    };
-    // 设置定时间 300ms滚动
-    rem.titflash = setInterval(function(){tit()}, 300);
-}
 // 暂停
 function audioPause() {
     rem.paused = true;      // 更新状态（已暂停）
@@ -135,12 +83,7 @@ function audioPause() {
     $(".btn-play").removeClass("btn-state-paused");     // 取消暂停
     
     $("#music-progress .dot-move").removeClass("dot-move");   // 小点闪烁效果
-
-     // 清除定时器
-    if (rem.titflash !== undefined ) 
-    {
-        clearInterval(rem.titflash);
-    }
+    
     document.title = rem.webTitle;    // 改变浏览器标题
 }
 
@@ -151,28 +94,7 @@ function prevMusic() {
 
 // 播放下一首歌
 function nextMusic() {
-    switch (rem.order ? rem.order : 1) {
-        case 1,2: 
-            playList(rem.playid + 1);
-        break;
-        case 3: 
-            if (musicList[1] && musicList[1].item.length) {
-                var id = parseInt(Math.random() * musicList[1].item.length);
-                playList(id);
-            }
-        break;
-        default:
-            playList(rem.playid + 1); 
-        break;
-    }
-}
-// 自动播放时的下一首歌
-function autoNextMusic() {
-    if(rem.order && rem.order === 1) {
-        playList(rem.playid);
-    } else {
-        nextMusic();
-    }
+    playList(rem.playid + 1);
 }
 
 // 歌曲时间变动回调函数
@@ -281,7 +203,7 @@ function initAudio() {
     rem.audio[0].addEventListener('timeupdate', updateProgress);   // 更新进度
     rem.audio[0].addEventListener('play', audioPlay); // 开始播放了
     rem.audio[0].addEventListener('pause', audioPause);   // 暂停
-    $(rem.audio[0]).on('ended', autoNextMusic);   // 播放结束
+    rem.audio[0].addEventListener('ended', nextMusic);   // 播放结束
     rem.audio[0].addEventListener('error', audioErr);   // 播放器错误处理
 }
 
@@ -320,6 +242,12 @@ function play(music) {
         refreshList();  // 更新列表显示
     }
     
+	// 解决网易云音乐部分歌曲无法播放问题
+    if(music.source == "netease") {
+        music.url = music.url.replace(/m7c.music./g, "m7.music.");
+        music.url = music.url.replace(/m8c.music./g, "m8.music.");
+    }
+	
     try {
         rem.audio[0].pause();
         rem.audio.attr('src', music.url);
@@ -329,7 +257,6 @@ function play(music) {
         return;
     }
     
-    rem.errCount = 0;   // 连续播放失败的歌曲数归零
     music_bar.goto(0);  // 进度条强制归零
     changeCover(music);    // 更新封面展示
     ajaxLyric(music, lyricCallback);     // ajax加载歌词
@@ -339,7 +266,7 @@ function play(music) {
 
 // 我的要求并不高，保留这一句版权信息可好？
 // 保留了，你不会损失什么；而保留版权，是对作者最大的尊重。
-console.info('欢迎使用 MKOnlinePlayer!\n当前版本：'+mkPlayer.version+' \n作者：mengkun(https://mkblog.cn)\n歌曲来源于各大音乐平台\nGithub：https://github.com/mengkunsoft/MKOnlineMusicPlayer');
+console.info('欢迎使用 MKOnlinePlayer!\n当前版本：'+mkPlayer.version+' \n作者：mengkun(http://mkblog.cn)\n歌曲来源于各大音乐平台\nGithub：https://github.com/mengkunsoft/MKOnlineMusicPlayer');
 
 // 音乐进度条拖动回调函数
 function mBcallback(newVal) {

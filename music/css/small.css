@@ -103,12 +103,12 @@
     
     /*控制按钮区域缩小*/
     .con-btn {
-        width: 120px;
+        width: 100px;
     }
     /*进度条调整*/
     .progress {
         width: auto;
-        margin-left: 130px;
+        margin-left: 110px;
         margin-right: 10px;
         height: 100%;
         position: relative;

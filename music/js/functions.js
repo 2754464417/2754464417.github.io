@@ -1,8 +1,8 @@
 /**************************************************
- * MKOnlinePlayer v2.4
+ * MKOnlinePlayer v2.32
  * 封装函数及UI交互模块
- * 编写：mengkun(https://mkblog.cn)
- * 时间：2018-3-11
+ * 编写：mengkun(http://mkblog.cn)
+ * 时间：2017-9-15
  *************************************************/
 // 判断是否是移动设备
 var isMobile = {  
@@ -28,9 +28,8 @@ $(function(){
         console.warn('播放器调试模式已开启，正常使用时请在 js/player.js 中按说明关闭调试模式');
     }
     
-    rem.isMobile = isMobile.any();      // 判断是否是移动设备
+    rem.isMobile = isMobile.any();
     rem.webTitle = document.title;      // 记录页面原本的标题
-    rem.errCount = 0;                   // 连续播放失败的歌曲数归零
     
     initProgress();     // 初始化音量条、进度条（进度条初始化要在 Audio 前，别问我为什么……）
     initAudio();    // 初始化 audio 标签，事件绑定
@@ -217,10 +216,6 @@ $(function(){
         pause();
     });
     
-    // 循环顺序的处理
-    $(".btn-order").click(function(){
-        orderChange();
-    });
     // 上一首歌
     $(".btn-prev").click(function(){
         prevMusic();
@@ -398,7 +393,6 @@ function openDownloadDialog(url, saveName)
     }
     var aLink = document.createElement('a');
     aLink.href = url;
-    aLink.target = "_blank";
     aLink.download = saveName || ''; // HTML5新增的属性，指定保存文件名，可以不要后缀，注意，file:///模式下不会生效
     var event;
     if(window.MouseEvent) event = new MouseEvent('click');
